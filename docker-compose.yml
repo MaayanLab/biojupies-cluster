@@ -1,0 +1,68 @@
+version: '3'
+services:
+  proxy:
+    image: maayanlab/proxy:latest
+    environment:
+      nginx_proxy_00: "/biojupies(/.*) http://biojupies/biojupies$$1"
+      nginx_proxy_01: "/notebook-generator-server(/.*) http://notebook-generator-server:5000/notebook-generator-server$$1"
+      # nginx_proxy_02: "/charon(/.*) http://charon:5000/charon$$1"
+      # nginx_proxy_03: "/cloudalignment(/.*) http://cloudalignment:5000/cloudalignment$$1"
+    ports:
+    - 80:80
+    - 443:443
+
+  biojupies:
+    # build:
+    #   context: ./biojupies/website
+    #   dockerfile: Dockerfile
+    image: maayanlab/biojupies:v1.3.2
+    environment:
+    - ENTRY_POINT=/biojupies
+    - DEV=false
+    - ELYSIUM_USERNAME=${ELYSIUM_USERNAME}
+    - ELYSIUM_PASSWORD=${ELYSIUM_PASSWORD}
+    - NOTEBOOK-GENERATOR-SERVER_BASE_URL=http://notebook-generator-server
+    - SQLALCHEMY_DATABASE_URI=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}/${MYSQL_DATABASE}
+    - SENTRY_DSN=${SENTRY_DSN}
+    - SECRET_KEY=${SECRET_KEY}
+    - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+    - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+
+  notebook-generator-server:
+    # build:
+    #   context: ./biojupies/server
+    #   dockerfile: Dockerfile
+    image: maayanlab/notebook-generator-server:v1.3.0
+    environment:
+    - DEVELOPMENT=False
+    - MAIL_USERNAME=${MAIL_USERNAME}
+    - MAIL_PASSWORD=${MAIL_PASSWORD}
+    - MAIL_RECIPIENT=${MAIL_RECIPIENT}
+    - SENTRY_DSN=${SENTRY_DSN}
+    - SQLALCHEMY_DATABASE_URI=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}/${MYSQL_DATABASE}
+
+  charon:
+    image: maayanlab/charon
+    environment:
+    - ELYSIUM_USERNAME=${ELYSIUM_USERNAME}
+    - ELYSIUM_PASSWORD=${ELYSIUM_PASSWORD}
+
+  cloudalignment:
+    image: maayanlab/cloudalignment
+    environment:
+    - ELYSIUM_USERNAME=${ELYSIUM_USERNAME}
+    - ELYSIUM_PASSWORD=${ELYSIUM_PASSWORD}
+
+  mysql:
+    image: mysql
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    - MYSQL_USER=${MYSQL_USER}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    - MYSQL_DATABASE=${MYSQL_DATABASE}
+    networks:
+      default:
+        aliases:
+        - ${MYSQL_HOST}
+    ports:
+    - 3306:3306

@@ -54,7 +54,10 @@ services:
     - ELYSIUM_PASSWORD=${ELYSIUM_PASSWORD}
 
   mysql:
-    image: mysql
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    image: maayanlab/biojupies-mysql:v1.0
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     - MYSQL_USER=${MYSQL_USER}
